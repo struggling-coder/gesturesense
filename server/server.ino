@@ -6,11 +6,12 @@ PINOUT
 11 - TRIG 2
 12 - ECHO 2
 */
-#include <Ultrasonic.h>
+#include "Ultrasonic.h"
 
 // We need to make our own library for improving triggering and resolution
 //Ultrasonic u1(9, 10);
-Ultrasonic u1(11, 12);
+Ultrasonic u1(11, 12, 6500);
+int count = 0;
 
 void setup()
 {
@@ -27,7 +28,17 @@ void loop()
 	if (Serial.available() > 0) {
     //Do nothing  
 	}
-  Serial.println(dat1);
+  if (count < 1000) {
+    digitalWrite(13, HIGH);
+    Serial.println(dat1);
+    count += 1;
+  }
+  else{
+    count = 0;
+    digitalWrite(13, LOW);
+    sleep(1000);
+  }
+
   //Serial.print(" ");
   //Serial.println(dat2);
   
