@@ -10,7 +10,7 @@ PINOUT
 
 // We need to make our own library for improving triggering and resolution
 //Ultrasonic u1(9, 10);
-Ultrasonic u1(11, 12, 6500);
+Ultrasonic u1(11, 12, 6000);
 int count = 0;
 
 void setup()
@@ -26,19 +26,19 @@ void loop()
   int dat1 = u1.distanceRead();
   //int dat2 = u2.distanceRead();
 	if (Serial.available() > 0) {
-    //Do nothing  
-	}
-  if (count < 1000) {
-    digitalWrite(13, HIGH);
-    Serial.println(dat1);
-    count += 1;
-  }
-  else{
-    count = 0;
-    digitalWrite(13, LOW);
-    sleep(1000);
   }
 
+  if (count < 1000) { 
+    digitalWrite(13, HIGH); 
+    Serial.println(dat1); 
+    count += 1; 
+  } 
+  else{ 
+    count = 0; 
+    digitalWrite(13, LOW); 
+    delay(1000); 
+  } 
+ 
   //Serial.print(" ");
   //Serial.println(dat2);
   
