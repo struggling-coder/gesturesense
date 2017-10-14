@@ -1,3 +1,5 @@
+# gestures = [down, up, Xin, ]
+
 import serial, time, pickle
 from numpy import array, std, mean, abs
 from numpy.random import randint
@@ -5,13 +7,13 @@ from numpy import zeros, array, argmax
 import matplotlib.pyplot as plt
 import net
 
-WINDOW = 20
+WINDOW = 10
 MIDDLE = 10
-WIDTH = 1000
+WIDTH = 200
 
-BATCH = 0
-EPOCHS = 0
-topology = (29, 2)
+BATCH = 10
+EPOCHS = 100
+topology = (60, 2)
 
 def lone_send(data):
 	ser = serial.Serial(port='COM5', baudrate=9600, parity=serial.PARITY_ODD, stopbits=serial.STOPBITS_TWO, bytesize=serial.SEVENBITS)
@@ -20,6 +22,23 @@ def lone_send(data):
 	ser.close()
 
 def listen(ser=None):
+	if ser is None: ser = serial.Serial(port='COM5', baudrate=9600, parity=serial.PARITY_ODD, stopbits=serial.STOPBITS_TWO, bytesize=serial.SEVENBITS)
+	_bin = [[], [], []]; data = 0;
+	time.sleep(0.5)
+	try:
+		for j in xrange(0, WIDTH):
+			raw = ser.readline()[:-2]
+			if raw: 
+				raw = raw.split(' ')
+				_bin[0].append(float(raw[0]))
+				_bin[1].append(float(raw[1]))
+				_bin[2].append(float(raw[2]))
+		return _bin
+	except Exception as e:
+		ser.close()
+		print "pipe closed, accumulated: "+str(len(_bin[0]))+" "+str(data)
+
+def listen1D(ser=None):
 	if ser is None: ser = serial.Serial(port='COM5', baudrate=9600, parity=serial.PARITY_ODD, stopbits=serial.STOPBITS_TWO, bytesize=serial.SEVENBITS)
 	bins = [[]]; data = 0;
 	time.sleep(1)
@@ -61,27 +80,65 @@ def wrapper(data):
 		NN.update(np.array(dnet)/BATCH, (np.array(dbias)/BATCH))
 	return NN
 
-def arrayavg(samples):
-	return int((search(samples)[-1] + search(samples)[0])/2.0)
+def arrayavg(samples): return int((search(samples)[-1] + search(samples)[0])/2.0)
 
-def invector(samples):
-	return samples[arrayavg(samples)-15:arrayavg(samples)+14]
+def invector(samples): return samples[arrayavg(samples)-15:arrayavg(samples)+15]
 	
 def capture1D():
 	ser = serial.Serial(port='COM5', baudrate=9600, parity=serial.PARITY_ODD, stopbits=serial.STOPBITS_TWO, bytesize=serial.SEVENBITS)
 	data = []
 	for j in xrange(0, 15):
 		try:
-			data.append([invector(listen(ser)), [1, 0]])
+			x = invector(listen1D(ser))
+			data.append([x, [1, 0]])
+			print x
 		except Exception as e:
 			return data
 	pickle.dump(data, open("1_"+str(time.time()), mode='w'))
 	return data
 
+def capture3D():
+	ser = serial.Serial(port='COM5', baudrate=9600, parity=serial.PARITY_ODD, stopbits=serial.STOPBITS_TWO, bytesize=serial.SEVENBITS)
+	data = []
+	for j in xrange(0, 15):
+		try:
+			point = []; av = []
+			bins = listen(ser)
+			for k in xrange(0, 3):
+				q = search(bins[k])
+				if len(q) > 0:
+					av.append(int((q[-1] + q[0])/2.0))		
+			average = int(mean(av))
+			point.extend(bins[0][average-15:average+15])
+			point.extend(bins[1][average-15:average+15])
+			point.extend(bins[2][average-15:average+15])
+			data.append([point, [0, 0, 1, 0, 0, 0]])
+			print bins[0]
+			print bins[1]
+			print bins[2]
+			time.sleep(1)
+		except Exception as e:
+			print e
+			return data
+	pickle.dump(data, open("1_"+str(time.time()), mode='w'))
+	return data
+
 def go():
-	data = capture1D()
+	data = capture1D()	
 	NN = wrapper(data)
 	print "training done"
 	while True:
 		print "listen for one second"
 		print NN.ff(invector(listen()))
+
+def pretty(data):
+	fdata = []
+	for j in xrange(0, len(data)):
+		print data[j][0][0:30]
+		print data[j][0][30:60]
+		print data[j][0][60:90]
+		if raw_input('loun kya? ') == 'y':
+			fdata.append(data[j])
+			print 'le liya'
+		print str(j+1) + " samples done"
+	return fdata
