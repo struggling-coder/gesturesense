@@ -12,9 +12,9 @@ WINDOW = 10
 MIDDLE = 10
 WIDTH = 200
 
-BATCH = 30
+BATCH = 15
 EPOCHS = 10000
-topology = (90, 6)
+topology = (45, 6)
 
 def lone_send(data):
 	ser = serial.Serial(port='COM5', baudrate=9600, parity=serial.PARITY_ODD, stopbits=serial.STOPBITS_TWO, bytesize=serial.SEVENBITS)
@@ -100,7 +100,7 @@ def capture1D():
 def capture3D():
 	ser = serial.Serial(port='COM5', baudrate=9600, parity=serial.PARITY_ODD, stopbits=serial.STOPBITS_TWO, bytesize=serial.SEVENBITS)
 	data = []
-	for j in xrange(0, 30):
+	for j in xrange(0, 1):
 		try:
 			point = []; av = []
 			bins = listen(ser)
@@ -145,7 +145,7 @@ def pretty(data):
 		except Exception as e:
 			return fdata, j
 	return fdata
-
+	
 def scan(tdata, NN=None):
 	if NN is None: NN = wrapper(tdata)
 	while True:
